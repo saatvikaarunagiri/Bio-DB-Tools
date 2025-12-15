@@ -31,7 +31,7 @@ Each module connects to biological datasets and demonstrates client-server integ
 <img width="501" height="266" alt="image" src="https://github.com/user-attachments/assets/0639a7bd-e813-4889-a57a-4cdd10ce86ac" />
 
 <img width="1430" height="618" alt="Screenshot 2025-12-14 at 23 24 19" src="https://github.com/user-attachments/assets/72ddbcab-a4a0-4ffb-806a-6017a5ce8f67" />
-<img width="303" height="262" alt="image" src="https://github.com/user-attachments/assets/542d8ce0-a6fe-4392-9a77-1823b2d57c97" />
+
 <img width="635" height="306" alt="image" src="https://github.com/user-attachments/assets/cccdfd1a-f2ac-4f98-94ca-8d67ea5ba569" />
 
 
