@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gene Function and Pathway Explorer</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: #003366;
+            background-color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        .top-header {
+            background-color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .brand-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #003366;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 180px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: #003366;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .menu:hover .dropdown-content {
+            display: block;
+        }
+
+        header {
+            background-image: url("https://img.freepik.com/free-photo/coloured-dna-espiral_1048-1991.jpg");
+            background-size: cover;
+            background-position: center;
+            padding: 40px;
+            text-align: left;
+            color: white;
+        }
+
+        header h1 {
+            margin: 0;
+            font-weight: bold;
+        }
+
+        header h2 {
+            font-weight: normal;
+            font-style: italic;
+            margin-top: 5px;
+            color: white;
+        }
+
+        .container {
+            padding: 30px;
+        }
+
+        .search-gene-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .search-section {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .gene-info-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .gene-circle {
+            background-color: #d9eaff;
+            color: #003366;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .gene-box {
+            margin-top: 10px;
+            border: 2px solid #003366;
+            padding: 15px 25px;
+            background-color: white;
+            font-size: 1rem;
+            text-align: left;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            width: 300px;
+            font-size: 1rem;
+            font-style: italic;
+            color: #003366;
+            border: 1px solid #aaa;
+        }
+
+        .button {
+            background-color: white;
+            color: #003366;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: 2px solid #003366;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: #e6f2ff;
+        }
+
+        .hint {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        select {
+            padding: 8px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+
+        form.download-form {
+            margin-top: 15px;
+            margin-bottom: -10px;
+        }
+
+        table.dataTable thead th {
+            background-color: #e6f2ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-header">
+        <div class="brand-name">
+	  <img src="https://img.freepik.com/free-photo/human-surrounded-by-dna_1048-2640.jpg" alt="BioDB Icon" style="height: 28px; width: 28px; margin-right: 8px; vertical-align: middle; border-radius: 4px;">
+	  <span style="vertical-align: middle;">BioDB</span>
+	</div>
+        <div class="menu">
+            <button class="menu-btn">&#9776;</button>
+            <div class="dropdown-content">
+                <a href="/my/path/to">Home</a>
+                <a href="/my/path/t">Pathways & Functions</a>
+                <a href="/my/path/t">Gene & GO Terms</a>
+                <a href="/my/path/t">Protein Interactions</a>
+                <a href="/my/path/t">How To Use</a>
+                <a href="/my/path/t">Contact</a>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <h1>Gene Function and Pathway Explorer</h1>
+        <h2>Molecular Functions and Pathways Associated with a Gene</h2>
+    </header>
+
+    <div class="container">
+    <div class="search-gene-row">
+        <!-- Search section (left) -->
+        <div class="search-section">
+            <form method="POST">
+                <label for="gene_input"><strong>Enter Gene of Interest:</strong></label><br>
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                    <input type="text" name="gene_input" id="gene_input"
+                        placeholder="Enter ENSEMBL ID or Gene symbol" value="{{ query_input or '' }}" required>
+                    <button class="button" type="submit">Submit</button>
+                </div>
+                <div class="hint">Example Inputs: AP-2BETA or ENSG00000008196</div>
+            </form>
+
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Gene info section (right) -->
+        {% if gene_info %}
+        <div class="gene-info-container">
+            <div class="gene-circle">
+                {{ gene_info.Symbol }}
+            </div>
+            <div class="gene-box">
+                <div><strong>ENSEMBL ID:</strong> {{ gene_info.Gene_ID }}</div>
+                <div><strong>Gene Name:</strong> {{ gene_info.Description }}</div>
+                <div><strong>Gene Length:</strong> {{ gene_info.Length }}</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if pathway_results %}
+        <h3>Associated Pathways</h3>
+        <form method="POST" action="{{ url_for('download') }}" class="download-form">
+            <input type="hidden" name="query_input" value="{{ query_input }}">
+            <input type="hidden" name="table_type" value="pathway">
+            <label for="format_pathway">Download as:</label>
+            <select name="format" id="format_pathway">
+                <option value="csv">CSV</option>
+                <option value="tsv">TSV</option>
+            </select>
+            <button class="button" type="submit">Download</button>
+        </form>
+        <p style="font-style: italic; margin-top: 15px;">Explore more at <a href="https://reactome.org/" target="_blank"><strong>Reactome!</strong></a></p>
+
+        <table id="pathway-table" class="display">
+            <thead>
+                <tr>
+                    <th>Pathway ID</th>
+                    <th>Pathway Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in pathway_results %}
+                <tr>
+                    <td>{{ row.Pathway_ID }}</td>
+                    <td>{{ row.Pathway_Name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if function_results %}
+        <h3 style="margin-top: 40px;">Molecular Functions</h3>
+        <form method="POST" action="{{ url_for('download') }}" class="download-form">
+            <input type="hidden" name="query_input" value="{{ query_input }}">
+            <input type="hidden" name="table_type" value="function">
+            <label for="format_function">Download as:</label>
+            <select name="format" id="format_function">
+                <option value="csv">CSV</option>
+                <option value="tsv">TSV</option>
+            </select>
+            <button class="button" type="submit">Download</button>
+        </form>
+        <p style="font-style: italic; margin-top: 15px;">Explore more at <a href="https://geneontology.org/" target="_blank"><strong>GO!</strong></a></p>
+
+        <table id="function-table" class="display">
+            <thead>
+                <tr>
+                    <th>GO ID</th>
+                    <th>Molecular Function</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in function_results %}
+                <tr>
+                    <td>{{ row.GO_ID }}</td>
+                    <td>{{ row.Molecular_Function }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</div>
+
+<!-- jQuery + DataTables -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#pathway-table').DataTable({ paging: false, info: false });
+        $('#function-table').DataTable({ paging: false, info: false });
+    });
+</script>
+</body>
+</html>
