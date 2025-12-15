@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Protein-Protein Interaction Network</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+	body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+	.container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+	.controls {
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+	.control-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+	label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+	select, input {
+            padding: 8px;
+            margin-right: 15px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+	button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+	button:hover {
+            background-color: #45a049;
+        }
+        #network-container {
+            flex-grow: 1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+            background-color: #f9f9f9;
+        }
+        #description {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            background-color: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+        .node {
+            cursor: pointer;
+        }
+        .link {
+            stroke-opacity: 0.6;
+        }
+        .tooltip {
+            position: absolute;
+            padding: 10px;
+            font: 12px sans-serif;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border-radius: 5px;
+            pointer-events: none;
+            z-index: 10;
+            display: none;
+        }
+  .legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .stats {
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Protein-Protein Interaction Network Visualization</h1>
+
+        <div class="controls">
+            <div class="control-row">
+                <label for="disease">Select Disease:</label>
+                <select id="disease">
+                    <option value="">--Choose a Disease--</option>
+                    {% for disease in diseases %}
+                        <option value="{{ disease }}">{{ disease }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="max-proteins">Max Proteins:</label>
+                <input type="number" id="max-proteins" min="5" max="100" value="25">
+
+                <button id="update-network">Update Network</button>
+            </div>
+        </div>
+
+        <div id="description"></div>
+
+ <div id="network-container">
+            <svg id="network-svg" width="100%" height="100%"></svg>
+            <div id="loading">Loading network data...</div>
+            <div class="tooltip"></div>
+        </div>
+
+        <div class="stats" id="network-stats"></div>
+    </div>
+
+    <script>
+    $(document).ready(function() {
+        // Set up SVG dimensions
+        const updateSvgDimensions = () => {
+            const containerWidth = $('#network-container').width();
+            const containerHeight = $('#network-container').height();
+            $('#network-svg').attr('width', containerWidth).attr('height', containerHeight);
+        };
+
+        updateSvgDimensions();
+        $(window).resize(updateSvgDimensions);
+
+        // Function to load and display the network
+        function loadNetwork(disease, maxProteins) {
+            if (!disease) return;
+
+            $('#loading').show();
+
+            // Get current URL path for relative API call
+            const currentPath = window.location.pathname.replace('network', 'get_ppi_data');
+
+            $.getJSON('/', {
+                disease: disease,
+                max_proteins: maxProteins
+            })
+            .done(function(response) {
+                $('#loading').hide();
+
+                if (response.status === "success" && response.data) {
+                    const data = response.data;
+
+                    // Display disease description
+                    $('#description').html(`<p><strong>Disease:</strong> ${disease}</p>
+                                           <p><strong>Description:</strong> ${data.description || 'No>
+  // Display stats
+                    $('#network-stats').html(`
+                        <p>Showing ${data.filteredProteins} proteins and ${data.filteredInteractions}>
+                        (filtered from a total of ${data.totalProteins} proteins and ${data.totalInte>
+                    `);
+
+                    // Render the network visualization
+                    renderNetwork(data);
+                } else {
+                    $('#description').html(`<p><em>Error: ${response.message || 'Failed to load netwo>
+                }
+            })
+            .fail(function(jqXHR) {
+                $('#loading').hide();
+                $('#description').html(`<p><em>Error: ${jqXHR.responseJSON?.message || 'Failed to fet>
+                console.error("Error fetching data:", jqXHR.responseJSON || jqXHR.statusText);
+            });
+        }
+
+        // Function to render the D3 network
+        function renderNetwork(data) {
+            const svg = d3.select("#network-svg");
+            const width = svg.attr("width");
+            const height = svg.attr("height");
+            const tooltip = d3.select(".tooltip");
+
+            // Clear any existing visualization
+            svg.selectAll("*").remove();
+
+            // Create a color scale for node types based on connection count
+            const maxConnections = d3.max(data.nodes, d => d.connections);
+            const colorScale = d3.scaleLinear()
+                .domain([1, maxConnections / 2, maxConnections])
+                .range(["#66c2a5", "#fc8d62", "#8da0cb"]);
+
+            // Set up force simulation
+            const simulation = d3.forceSimulation(data.nodes)
+                .force("link", d3.forceLink(data.links)
+                    .id(d => d.id)
+                    .distance(100))
+                .force("charge", d3.forceManyBody().strength(-300))
+                .force("center", d3.forceCenter(width / 2, height / 2))
+                .force("collide", d3.forceCollide().radius(d => Math.sqrt(d.connections) * 3 + 10));
+
+    // Create links
+            const links = svg.append("g")
+                .selectAll("line")
+                .data(data.links)
+                .enter()
+                .append("line")
+                .attr("class", "link")
+                .attr("stroke", "#999")
+                .attr("stroke-width", d => 1 + Math.sqrt(d.value))
+                .on("mouseover", function(event, d) {
+                    tooltip.style("display", "block")
+                        .html(`
+                            <strong>Interaction:</strong> ${d.type}<br>
+                            <strong>Throughput:</strong> ${d.throughput}
+                        `)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 10) + "px");
+                })
+                .on("mouseout", function() {
+                    tooltip.style("display", "none");
+                });
+
+            // Create nodes
+            const nodes = svg.append("g")
+                .selectAll("circle")
+                .data(data.nodes)
+                .enter()
+                .append("circle")
+                .attr("class", "node")
+                .attr("r", d => 5 + Math.sqrt(d.connections) * 1.5)
+                .attr("fill", d => colorScale(d.connections))
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 1.5)
+                .on("mouseover", function(event, d) {
+                    tooltip.style("display", "block")
+                        .html(`
+                            <strong>Protein:</strong> ${d.name}<br>
+                            <strong>Gene:</strong> ${d.gene}<br>
+                            <strong>Connections:</strong> ${d.connections}
+                        `)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 10) + "px");
+
+ // Highlight connections
+                    links.attr("stroke", l =>
+                        (l.source.id === d.id || l.target.id === d.id) ? "#ff0000" : "#999")
+                        .attr("stroke-width", l =>
+                            (l.source.id === d.id || l.target.id === d.id) ? 3 : 1 + Math.sqrt(l.valu>
+                })
+                .on("mouseout", function() {
+                    tooltip.style("display", "none");
+                    links.attr("stroke", "#999")
+                        .attr("stroke-width", d => 1 + Math.sqrt(d.value));
+                })
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended));
+
+            // Add node labels
+            const labels = svg.append("g")
+                .selectAll("text")
+                .data(data.nodes)
+                .enter()
+                .append("text")
+                .attr("dx", 12)
+                .attr("dy", ".35em")
+                .text(d => d.connections > maxConnections / 5 ? d.gene : "")
+                .attr("font-size", 10)
+                .attr("font-weight", "bold");
+
+            // Add a legend
+            const legend = svg.append("g")
+                .attr("class", "legend")
+                .attr("transform", "translate(" + (width - 180) + "," + 20 + ")");
+
+            legend.append("rect")
+                .attr("width", 160)
+                .attr("height", 80)
+                .attr("fill", "white")
+                .attr("stroke", "#ddd");
+
+            legend.append("text")
+                .attr("x", 10)
+                .attr("y", 20)
+                .text("Node size: # of connections")
+                .attr("font-size", 12);
+legend.append("text")
+                .attr("x", 10)
+                .attr("y", 40)
+                .text("Color: Connection count")
+                .attr("font-size", 12);
+
+            legend.append("circle")
+                .attr("cx", 20)
+                .attr("cy", 60)
+                .attr("r", 5)
+                .attr("fill", colorScale(1));
+
+            legend.append("text")
+                .attr("x", 35)
+                .attr("y", 65)
+                .text("Low")
+                .attr("font-size", 12);
+
+            legend.append("circle")
+                .attr("cx", 80)
+                .attr("cy", 60)
+                .attr("r", 5)
+                .attr("fill", colorScale(maxConnections/2));
+
+            legend.append("text")
+                .attr("x", 95)
+                .attr("y", 65)
+                .text("High")
+                .attr("font-size", 12);
+
+            // Simulation tick function
+            simulation.on("tick", () => {
+                // Keep nodes within bounds
+                nodes.attr("cx", d => {
+                    return d.x = Math.max(20, Math.min(width - 20, d.x));
+                })
+                .attr("cy", d => {
+                    return d.y = Math.max(20, Math.min(height - 20, d.y));
+                });
+ links.attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                labels.attr("x", d => d.x)
+                    .attr("y", d => d.y);
+            });
+
+            // Drag functions
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+
+            // Add zoom capability
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 4])
+                .on("zoom", (event) => {
+                    svg.selectAll("g").attr("transform", event.transform);
+                });
+
+            svg.call(zoom);
+        }
+
+	// Event listeners
+        $('#update-network').on('click', function() {
+            const disease = $('#disease').val();
+            const maxProteins = $('#max-proteins').val();
+            loadNetwork(disease, maxProteins);
+        });
+ $('#disease').on('change', function() {
+            const disease = $(this).val();
+            const maxProteins = $('#max-proteins').val();
+            if (disease) {
+                loadNetwork(disease, maxProteins);
+            }
+	});
+    });
+    </script>
+</body>
+</html>
