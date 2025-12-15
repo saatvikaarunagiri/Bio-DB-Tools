@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contact - BioDB</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f8fa;
+    }
+
+    .top-header {
+      background-color: #cce5ff;
+      padding: 10px 30px;
+      display: flex;
+      align-items: center;
+    }
+
+    .top-header img {
+      height: 40px;
+      margin-right: 10px;
+    }
+
+    .top-header h2 {
+      color: #003366;
+      margin: 0;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: center;
+      background-color: #003366;
+      padding: 12px 0;
+    }
+
+    .navbar a {
+      color: white;
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .navbar a:hover {
+      color: #66ccff;
+    }
+
+    .hero-banner {
+      position: relative;
+      width: 100%;
+    }
+
+    .hero-banner img {
+      width: 100%;
+      height: 410px;
+      display: block;
+    }
+
+    .hero-text {
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -30%);
+      text-align: center;
+      color: white;
+      background-color: rgba(0, 0, 0, 0.4);
+      padding: 20px 40px;
+      border-radius: 10px;
+    }
+
+    .hero-text h1 {
+      margin: 0;
+      font-size: 36px;
+    }
+
+    .hero-text p {
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .contact-info {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      max-width: 1000px;
+      margin: 50px auto;
+      gap: 20px;
+      text-align: center;
+    }
+
+    .info-box i {
+      font-size: 28px;
+      color: #003366;
+      margin-bottom: 10px;
+    }
+
+    .info-box h3 {
+      margin-bottom: 5px;
+      color: #003366;
+    }
+
+    footer {
+      background-color: #003366;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .contact-info {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-header">
+    <img src="https://img.freepik.com/free-photo/human-surrounded-by-dna_1048-2640.jpg" alt="logo">
+    <h2>BioDB</h2>
+  </div>
+
+  <div class="navbar">
+    <a href="/my/path/to/">Home</a>
+    <a href="/my/path/to/">About Us</a>
+    <a href="/my/path/to/">Pathways & Functions</a>
+    <a href="/my/path/to/">Gene & GO Terms</a>
+    <a href="/my/path/to/">Protein Interactions</a>
+    <a href="/my/path/to/">How To Use</a>
+    <a href="/my/path/to/">Contact</a>
+  </div>
+
+  <!-- Hero Image with Text -->
+  <div class="hero-banner">
+    <img src="https://img.freepik.com/free-photo/creative-inspired-cute-excited-redhead-woman-journalist-writer-creating-new-ideas-looking_1258-309886.jpg" alt="Banner">
+    <div class="hero-text">
+      <h1>Contact Us</h1>
+      <p>Need help or want to collaborate? Reach out through the info below.</p>
+    </div>
+  </div>
+
+  <!-- Contact Info Boxes -->
+  <div class="contact-info">
+    <div class="info-box">
+      <i class="fas fa-envelope"></i>
+      <h3>Email</h3>
+      <p><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="631706020e52564d00071023040e020a0f4d000c0e">[email&#160;protected]</a></p>
+    </div>
+    <div class="info-box">
+      <i class="fas fa-map-marker-alt"></i>
+      <h3>Location</h3>
+      <p>Boston University, MA, USA</p>
+    </div>
+    <div class="info-box">
+      <i class="fas fa-clock"></i>
+      <h3>Working Hours</h3>
+      <p>Mon – Fri | 9:00 AM 
