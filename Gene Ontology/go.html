@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Disease GO Term Viewer</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f5f9ff;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: #3182ce;
+            color: #3182ce;
+            position: relative;
+        }
+        .navbar h1 {
+            font-size: 24px; 
+            margin: 0;color: white;
+        }
+        .menu-icon {
+            font-size: 26px;
+            cursor: pointer;color: white;
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 20px;
+            top: 60px;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+            width: 200px;
+            z-index: 1000;
+        }
+        .dropdown-menu a {
+            display: block;
+            padding: 12px 20px;
+            text-decoration: none;
+            color: #2c5282;
+            border-bottom: 1px solid #eee;
+        }
+        .dropdown-menu a:hover {
+            background-color: #f1f1f1;
+        }
+        .banner {
+            width: 100%;
+            height: 200px;
+            background: url('https://img.freepik.com/free-vector/dna-chromosome-banner-concept_333792-98.jpg') center/cover no-repeat;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: black;
+            font-size: 34px;
+            font-weight: bold;
+        }
+        .container {
+            width: calc(100% - 60px);
+            margin: 20px 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #2c5282;
+        }
+        p.description {
+            font-size: 16px;
+            margin-top: 10px;
+            color: #333;
+            line-height: 1.6;
+        }
+        .control-group {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        label {
+            font-weight: bold;
+        }
+        select, button {
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        #query-btn {
+            background: #3182ce;
+            color: white;
+            border: none;
+        }
+        #download-btn {
+            background: #38a169;
+            color: white;
+            border: none;
+            display: none;
+        }
+        #file-format {
+            padding: 8px;
+            margin-left: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            display: none;
+        }
+        #loading {
+            margin-left: 10px;
+            color: #3182ce;
+            font-weight: bold;
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        th {
+            background: #3182ce;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background: #f8f8f8;
+        }
+        #error {
+            color: red;
+            margin-top: 10px;
+        }
+        /* New button for Gene Ontology link */
+        #go-ontology-btn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #2c5282;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #go-ontology-btn:hover {
+            background-color: #1a365d;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <div class="navbar">
+        <h1 style="display: flex; align-items: center; gap: 8px; font-size: 28px; margin: 0;">
+	  <img src="https://img.freepik.com/free-photo/human-surrounded-by-dna_1048-2640.jpg" alt="BioDB Icon" style="height: 30px; width: 30px; border-radius: 5px;">
+	  BioDB
+	</h1>
+        <div class="menu-icon">&#9776;</div>
+        <div class="dropdown-menu">
+            <a href="/my/path/to/">Home</a>
+            <a href="/my/path/to/">Pathways & Functions</a>
+            <a href="/my/path/to/">Gene & GO Terms</a>
+            <a href="/my/path/to/">Protein Interactions</a>
+            <a href="/my/path/to/">How To Use</a>
+            <a href="/my/path/to/">Contact</a>
+        </div>
+    </div>
+
+    <!-- Banner Image -->
+    <div class="banner">
+        Disease GO Term Viewer
+    </div>
+
+    <div class="container">
+        <h2>Disease GO Term Associations</h2>
+        <p class="description">
+            This tool allows you to explore the associations between a selected disease and its related genes and GO (Gene Ontology) terms. For each gene linked to the disease, it lists relevant GO terms categorized by Biological Process (BP), Molecular Function (MF), or Cellular Component (CC). Additionally, it provides the <strong>OT Disease–Gene Confidence Score</strong>, which represents the confidence of the association between the disease and gene, based on data from <strong>Open Targets (OT)</strong>.
+        </p>
+
+        <!-- New button for Gene Ontology -->
+        <button id="go-ontology-btn">Go to Gene Ontology Website</button>
+
+        <div class="control-group">
+            <div>
+                <label for="disease">Select Disease:</label>
+                <select id="disease">
+                    <option value="">-- Choose Disease --</option>
+                    {% for disease in diseases %}
+                        <option value="{{ disease }}" {% if disease == selected_disease %}selected{% endif %}>{{ disease }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="go_type">GO Category:</label>
+                <select id="go_type">
+                    <option value="All" {% if selected_go_type == 'All' %}selected{% endif %}>All</option>
+                    <option value="BP" {% if selected_go_type == 'BP' %}selected{% endif %}>Biological Process</option>
+                    <option value="MF" {% if selected_go_type == 'MF' %}selected{% endif %}>Molecular Function</option>
+                    <option value="CC" {% if selected_go_type == 'CC' %}selected{% endif %}>Cellular Component</option>
+                </select>
+            </div>
+            <div>
+                <button id="query-btn">Search</button>
+                <select id="file-format">
+                    <option value="csv">CSV</option>
+                    <option value="tsv">TSV</option>
+                </select>
+                <button id="download-btn">Download Table</button>
+                <span id="loading">Loading...</span>
+            </div>
+        </div>
+
+        <div id="error"></div>
+
+        <table id="go-term-table" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Gene Symbol</th>
+                    <th>GO ID</th>
+                    <th>GO Term</th>
+                    <th>Category</th>
+                    <th>OT Disease–Gene Confidence Score</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+    $(document).ready(function() {
+        // Toggle dropdown menu
+        $('.menu-icon').on('click', function() {
+            $('.dropdown-menu').toggle();
+        });
+
+        // Gene Ontology button click handler
+        $('#go-ontology-btn').on('click', function() {
+            window.open('https://geneontology.org', '_blank');
+        });
+
+        $('#query-btn').on('click', function() {
+            const disease = $('#disease').val();
+            const go_type = $('#go_type').val();
+
+            if (!disease) {
+                $('#error').text('Please select a disease');
+                return;
+            }
+
+            $('#error').empty();
+            $('#loading').show();
+            $('#go-term-table').hide();
+            $('#download-btn').hide();
+            $('#file-format').hide();
+
+            const currentPath = window.location.pathname;
+
+            // 🚀 Fetch top 200 rows only
+            $.getJSON(currentPath, { disease: disease, go_type: go_type })
+                .done(function(response) {
+                    if (response && response.data && response.data.length > 0) {
+                        $('#go-term-table tbody').empty();
+                        $('#go-term-table').show();
+
+                        response.data.forEach(function(row) {
+                            $('#go-term-table tbody').append(`
+                                <tr>
+                                    <td>${row.gene || 'N/A'}</td>
+                                    <td>${row.go_id || 'N/A'}</td>
+                                    <td>${row.go_term || 'N/A'}</td>
+                                    <td>${row.category || 'N/A'}</td>
+                                    <td>${row.confidence_score !== undefined ? row.confidence_score : 'N/A'}</td>
+                                </tr>
+                            `);
+                        });
+
+                        $('#download-btn').show();
+                        $('#file-format').show();
+                    } else {
+                        $('#go-term-table').hide();
+                        $('#error').text('No results found for this selection.');
+                        $('#download-btn').hide();
+                        $('#file-format').hide();
+                    }
+                })
+                .fail(function(jqXHR) {
+                    $('#go-term-table').hide();
+                    $('#error').text(`Error: ${jqXHR.responseJSON?.message || 'Failed to load data'}`);
+                })
+                .always(function() {
+                    $('#loading').hide();
+                });
+        });
+
+        $('#download-btn').on('click', function() {
+            const disease = $('#disease').val();
+            const go_type = $('#go_type').val();
+            const format = $('#file-format').val();
+            const separator = format === 'tsv' ? '\t' : ',';
+
+            const currentPath = window.location.pathname;
+
+            // 🚀 Fetch ALL data for download (entries=all)
+            $.getJSON(currentPath, { disease: disease, go_type: go_type, entries: 'all' })
+                .done(function(response) {
+                    if (response && response.data && response.data.length > 0) {
+                        const headers = ['Gene Symbol', 'GO ID', 'GO Term', 'Category', 'OT Disease–Gene Confidence Score'];
+                        const tableData = [headers.join(separator)];
+
+                        response.data.forEach(row => {
+                            const rowData = [
+                                row.gene || '',
+                                row.go_id || '',
+                                row.go_term || '',
+                                row.category || '',
+                                row.confidence_score !== undefined ? row.confidence_score : ''
+                            ].map(item=> `"${String(item).replace(/"/g, '""')}"`);
+                            tableData.push(rowData.join(separator));
+                        });
+
+                        const blob = new Blob([tableData.join('\n')], {
+                            type: format === 'tsv' ? 'text/tab-separated-values' : 'text/csv'
+                        });
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = `${disease || 'go_term_data'}.${format}`;
+                        link.click();
+                    } else {
+                        alert('No data available for download.');
+                    }
+                })
+                .fail(function() {
+                    alert('Error fetching data for download.');
+                });
+        });
+    });
+    </script>
+</body>
+</html>
