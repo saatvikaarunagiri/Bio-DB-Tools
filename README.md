@@ -1,12 +1,12 @@
 # Bio-DB Tools
 
-A curated set of interactive web applications built to explore and visualize biological data. These tools were developed as part of the *Biological Database Analysis* course at Boston University, and reflect my interest in combining front-end web development with real-world bioinformatics applications.
+A curated set of interactive web applications built to explore and visualize biological data. These tools were developed to reflect my interest in combining front-end web development with real-world bioinformatics applications.
 
 Each module connects to biological datasets and demonstrates client-server integration using HTML, JavaScript, AJAX, and backend scripting (Flask, PHP, or SQL). The goal is to create lightweight, accessible tools that allow users to interact with biological data in a meaningful way — whether it’s querying gene annotations or visualizing expression profiles.
 
 ---
 
-## 🗂️ Contents
+## Contents
 
 | Module | Description |
 |--------|-------------|
