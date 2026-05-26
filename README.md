@@ -17,7 +17,7 @@ Each module connects to biological datasets and demonstrates client-server integ
 
 ---
 
-## 🛠️ Technologies Used
+## Technologies Used
 - **Frontend**: HTML, CSS, JavaScript, AJAX
 - **Backend**: Flask (Python), PHP, SQL (MariaDB)
 - **Visualization**: Google Charts, Cytoscape.js
